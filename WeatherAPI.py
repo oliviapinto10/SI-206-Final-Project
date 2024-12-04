@@ -170,25 +170,39 @@ def create_weather_table(cur, conn):
     """)
     conn.commit()
 
-def populate_weather_table(json_file, cur, conn):
+def populate_weather_table(json_file, cur, conn, batch_size=25):
     """
     Populates the WeatherData table with data from a JSON file.
     """
+    # with open(json_file, 'r') as f:
+    #     data = [json.loads(line) for line in f.readlines()]
+
+    # for entry in data:
+    #     cur.execute("""
+    #         INSERT INTO WeatherData (date, value)
+    #         VALUES (?, ?)
+    #     """, (entry['date'], entry['value']))
+    
+    # conn.commit()
     with open(json_file, 'r') as f:
         data = [json.loads(line) for line in f.readlines()]
 
-    for entry in data:
-        cur.execute("""
-            INSERT INTO WeatherData (date, value)
-            VALUES (?, ?)
-        """, (entry['date'], entry['value']))
-    
-    conn.commit()
+    batch = []
+    for i, entry in enumerate(data):
+        batch.append((entry['date'], entry['value']))
+        if len(batch) == batch_size or i == len(data) - 1:
+            cur.executemany("""
+                INSERT INTO WeatherData (date, value)
+                VALUES (?, ?)
+            """, batch)
+            conn.commit()
+            print(f"Inserted {len(batch)} records into the database.")
+            batch = []
 
 def main():
     cur, conn = set_up_database('db_name')
     create_weather_table(cur, conn)
-    populate_weather_table('weather_cache.json', cur, conn)
+    populate_weather_table('weather_cache.json', cur, conn, batch_size=25)
     conn.close()
 
 if __name__ == "__main__":
