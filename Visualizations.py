@@ -1,7 +1,7 @@
 import sqlite3
 import matplotlib.pyplot as plt
 
-#Population Visualization 
+#Population Visualization (bar graph)
 
 def fetch_population_for_years(db_name="Windy City Trends.db"):
     """Fetch population for the years 2000 and 2020 from the database."""
@@ -28,7 +28,7 @@ categories = ["2000", "2020", "Change"]
 values = [population_2000, population_2020, population_change]
 
 plt.figure(figsize=(8, 6))
-colors = ["pink", "violet", "red"]
+colors = ["gray", "teal", "red"]
 bars = plt.bar(categories, values, color=colors)
 
 for i, bar in enumerate(bars):
@@ -43,7 +43,7 @@ plt.xlabel("Years", fontsize=13)
 
 plt.show() 
 
-#Precipitation Visualization  
+#Precipitation Visualization (line chart)
 
 def fetch_precipitation_from_db(db_name="Windy City Trends.db"):
     """Fetch all precipitation data from the database."""
@@ -52,7 +52,6 @@ def fetch_precipitation_from_db(db_name="Windy City Trends.db"):
     cursor.execute("""
         SELECT date, value
         FROM precipitation_data
-        ORDER BY date
     """)
     data = cursor.fetchall()
     conn.close()
@@ -64,23 +63,73 @@ precipitation_by_year_month = {}
 for date, value in precipitation_data:
     year, month, _ = date.split("-")
     if year not in precipitation_by_year_month:
-        precipitation_by_year_month[year] = {str(i).zfill(2): 0 for i in range(1, 13)}
-    precipitation_by_year_month[year][month] += value
+        precipitation_by_year_month[year] = {str(i).zfill(2): [] for i in range(1, 13)}
+    precipitation_by_year_month[year][month].append(value)
+
+monthly_averages_by_year_precipitation = {}
+for year, monthly_data in precipitation_by_year_month.items():
+    monthly_averages = {month: sum(values) / len(values) for month, values in monthly_data.items()}
+    monthly_averages_by_year_precipitation[year] = monthly_averages
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-colors = ["navy", "darkorange"]  
+colors = ["navy", "coral"]  
 
 plt.figure(figsize=(10, 6))
 
-for i, (year, monthly_data) in enumerate(precipitation_by_year_month.items()):
-    monthly_precipitation = [monthly_data[str(i).zfill(2)] for i in range(1, 13)]
-    plt.plot(months, monthly_precipitation, marker='o', label=f"Year {year}", color=colors[i % len(colors)])
+for i, (year, monthly_data) in enumerate(monthly_averages_by_year_precipitation.items()):
+    monthly_averages = [monthly_data[str(i).zfill(2)] for i in range(1, 13)]
+    plt.plot(months, monthly_averages, marker='o', label=f"Year {year}", color=colors[i % len(colors)])
 
-plt.title("Monthly Precipitation in Chicago (2000 & 2020)", fontsize=17)
+plt.title("Monthly Average Precipitation in Chicago (2000 & 2020)", fontsize=17)
 plt.xlabel("Month", fontsize=15)
-plt.ylabel("Total Precipitation (mm)", fontsize=15)
+plt.ylabel("Average Precipitation (mm)", fontsize=15)
 plt.xticks(months, fontsize=11)
 plt.legend(title="Year Legend", fontsize=11)
 
-plt.show() 
+plt.show()
+
+# Humidity Visualization (line chart)
+
+def fetch_humidity_from_db(db_name="Windy City Trends.db"):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT date, humidity
+        FROM humidity_data
+    """)
+    data = cursor.fetchall()
+    conn.close()
+    return data
+
+humidity_data = fetch_humidity_from_db()
+
+humidity_by_year_month = {}
+for date, humidity in humidity_data:
+    year, month, _ = date.split("-")
+    if year not in humidity_by_year_month:
+        humidity_by_year_month[year] = {str(i).zfill(2): [] for i in range(1, 13)}
+    humidity_by_year_month[year][month].append(humidity)
+
+monthly_averages_by_year = {}
+for year, monthly_data in humidity_by_year_month.items():
+    monthly_averages = {month: sum(humidity_values) / len(humidity_values) for month, humidity_values in monthly_data.items()}
+    monthly_averages_by_year[year] = monthly_averages
+
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+colors = ["green", "brown"]  
+
+plt.figure(figsize=(10, 6))
+
+for i, (year, monthly_data) in enumerate(monthly_averages_by_year.items()):
+    monthly_averages = [monthly_data[str(i).zfill(2)] for i in range(1, 13)]
+    plt.plot(months, monthly_averages, marker='o', label=f"Year {year}", color=colors[i % len(colors)])
+
+plt.title("Monthly Average Humidity in Chicago (2000 & 2020)", fontsize=17)
+plt.xlabel("Month", fontsize=15)
+plt.ylabel("Average Humidity (%)", fontsize=15)
+plt.xticks(months, fontsize=11)
+plt.legend(title="Year Legend", fontsize=11)
+
+plt.show()
