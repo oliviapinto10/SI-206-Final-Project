@@ -26,7 +26,7 @@ def fetch_humidity_data(offset=0, limit=25):
             params = {
                 "unitGroup": "metric",
                 "include": "humidity",
-                "key": "LD3LLBVZZT33SWHNGE346DGHV",  
+                "key": "RNPVCKPGQP3VMSVR72GYY35WX",  
                 "contentType": "json"
             }
 
