@@ -1,5 +1,3 @@
-# 
-
 import requests
 import sqlite3
 from datetime import datetime
@@ -70,13 +68,11 @@ def fetch_precipitation_data(offset=0, limit=25):
     return precipitation_data
 
 
-# Setup database connection
 current_offset = 0
 db_file = 'Windy City Trends.db'
 conn = sqlite3.connect(db_file)
 cursor = conn.cursor()
 
-# Create table with date as INTEGER
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS precipitation_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,24 +84,23 @@ cursor.execute("""
 cursor.execute("SELECT COUNT(*) FROM precipitation_data")
 current_offset = cursor.fetchone()[0]
 
-# Fetch the precipitation data
 precipitation_data = fetch_precipitation_data(offset=current_offset, limit=25)
 
 insert_query = "INSERT OR IGNORE INTO precipitation_data (date, value) VALUES (?, ?)"
 
-# Prepare data for insertion
+
 records_to_insert = [(record["date"], record["value"]) for record in precipitation_data]
 
 batch_size = 25
 
-# Insert the records in batches
+
 for i in range(0, len(records_to_insert), batch_size):
     batch = records_to_insert[i:i + batch_size]
     cursor.executemany(insert_query, batch)
 
 conn.commit()
 
-# Remove duplicates by keeping the first entry for each date
+
 cursor.execute("""
     DELETE FROM precipitation_data
     WHERE id NOT IN (
@@ -117,6 +112,5 @@ cursor.execute("""
 
 conn.commit()
 
-# Close the connection
 cursor.close()
 conn.close()
