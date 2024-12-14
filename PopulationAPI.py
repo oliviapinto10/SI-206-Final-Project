@@ -1,5 +1,6 @@
 import sqlite3
 import requests
+from datetime import datetime
 
 def initialize_database(db_name="Windy City Trends.db"):
     """Initialize the SQLite database and create the table if it doesn't exist."""
@@ -7,7 +8,7 @@ def initialize_database(db_name="Windy City Trends.db"):
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS chicago_population (
-            date TEXT PRIMARY KEY,
+            date INTEGER PRIMARY KEY,
             population INTEGER
         )
     """)
@@ -66,9 +67,13 @@ def fetch_chicago_population(api_key, db_name="Windy City Trends.db"):
             for date in first_5_days:
                 date_str = f"{year}-{date}"
 
-                if not fetch_population_from_db(db_name, date_str):
+                # Convert date string to integer in YYYYMMDD format
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                date_int = int(date_obj.strftime("%Y%m%d"))
+
+                if not fetch_population_from_db(db_name, date_int):
                     results.append({
-                        "date": date_str,
+                        "date": date_int,
                         "population": population
                     })
 
