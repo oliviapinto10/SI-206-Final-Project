@@ -1,5 +1,6 @@
 import requests
 import sqlite3
+from datetime import datetime
 
 def get_date_range(year, month, days=5):  
     start_date = f"{year}-{month:02d}-01"
@@ -26,7 +27,7 @@ def fetch_humidity_data(offset=0, limit=25):
             params = {
                 "unitGroup": "metric",
                 "include": "humidity",
-                "key": "RNPVCKPGQP3VMSVR72GYY35WX",  
+                "key": "SVLYBW236GM8NQ6A939Y88VJV",  
                 "contentType": "json"
             }
 
@@ -43,6 +44,9 @@ def fetch_humidity_data(offset=0, limit=25):
 
                     for record in fetched_data:
                         if count >= offset:
+                            # Convert the date string to an integer in YYYYMMDD format
+                            date_obj = datetime.strptime(record["date"], "%Y-%m-%d")
+                            record["date"] = int(date_obj.strftime("%Y%m%d"))
                             humidity_data.append(record)
                         count += 1
 
@@ -57,24 +61,28 @@ def fetch_humidity_data(offset=0, limit=25):
 
     return humidity_data
 
+
 db_file = 'Windy City Trends.db'
 conn = sqlite3.connect(db_file)
 cursor = conn.cursor()
 
+
 cursor.execute("""
    CREATE TABLE IF NOT EXISTS humidity_data (
-   	id INTEGER PRIMARY KEY AUTOINCREMENT,
-   	date TEXT NOT NULL UNIQUE,
-   	humidity REAL NOT NULL
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       date INTEGER NOT NULL UNIQUE,
+       humidity REAL NOT NULL
    );
 """)
 
 cursor.execute("SELECT COUNT(*) FROM humidity_data")
 current_offset = cursor.fetchone()[0]
 
+
 humidity_data = fetch_humidity_data(offset=current_offset, limit=25)
 
 insert_query = "INSERT OR IGNORE INTO humidity_data (date, humidity) VALUES (?, ?)"
+
 
 records_to_insert = [(record["date"], record["humidity"]) for record in humidity_data]
 
@@ -89,9 +97,9 @@ conn.commit()
 cursor.execute("""
    DELETE FROM humidity_data
    WHERE id NOT IN (
-   	SELECT MIN(id)
-   	FROM humidity_data
-   	GROUP BY date
+       SELECT MIN(id)
+       FROM humidity_data
+       GROUP BY date
    );
 """)
 
