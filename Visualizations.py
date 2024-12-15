@@ -246,3 +246,71 @@ plt.xticks(months, fontsize=11)
 plt.legend(title="Year Legend", fontsize=11)
 
 plt.show()
+
+#JOIN with Population + Temperature and Visualization 
+
+import numpy as np
+
+def fetch_population_and_monthly_temperature(db_name="Windy City Trends.db"):
+    """Fetch population and monthly temperature data for 2000 and 2020."""
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+   
+    cursor.execute("""
+        SELECT 
+            SUBSTR(p.date, 1, 4) AS year,
+            SUBSTR(p.date, 5, 2) AS month,
+            AVG(p.population) AS avg_population,
+            AVG(t.temperature) AS avg_temperature
+        FROM chicago_population p
+        INNER JOIN temperature_data t  -- Explicit INNER JOIN
+        ON SUBSTR(p.date, 1, 6) = SUBSTR(t.date, 1, 6)  -- Match year and month
+        WHERE SUBSTR(p.date, 1, 4) IN ('2000', '2020')
+        GROUP BY year, month
+        ORDER BY year, month;
+    """)
+    data = cursor.fetchall()
+    conn.close()
+
+    population_and_temperature = {"2000": {}, "2020": {}}
+    for year, month, avg_population, avg_temperature in data:
+        population_and_temperature[year][month] = {"avg_population": avg_population, "avg_temperature": avg_temperature}
+    
+    return population_and_temperature
+
+def visualize_population_and_temperature(data):
+    """Create a dual-axis chart with population and temperature by month."""
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    month_numbers = [str(i).zfill(2) for i in range(1, 13)]  
+    
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+    
+    ax2 = ax1.twinx() 
+    colors = {"2000": "purple", "2020": "gold"}
+    
+    for year, monthly_data in data.items():
+        avg_population = next(iter(monthly_data.values()))["avg_population"] / 1e6  
+        avg_temperatures = [monthly_data.get(month, {}).get("avg_temperature", None) for month in month_numbers]
+       
+        ax2.plot(months, avg_temperatures, marker='o', label=f"Temperature ({year})", color=colors[year], linewidth=2)
+
+        ax1.hlines(avg_population, xmin=0, xmax=len(months)-1, colors=colors[year], label=f"Population ({year})", linewidth=3)  
+
+    ax1.set_ylabel("Population (millions)", fontsize=13, color="black")
+    ax1.tick_params(axis='y', labelcolor="black")
+
+    ax2.set_ylabel("Temperature (°C)", fontsize=13, color="black")
+    ax2.tick_params(axis='y', labelcolor="black")
+
+    plt.title("Monthly Temperature vs. Population in Chicago (2000 & 2020)", fontsize=15)
+    ax1.set_xlabel("Month", fontsize=13)
+    ax1.set_xticks(range(len(months)))
+    ax1.set_xticklabels(months, fontsize=11)
+
+    ax1.legend(loc="upper left", fontsize=10)
+    ax2.legend(loc="upper right", fontsize=10)
+
+    plt.show()
+
+data = fetch_population_and_monthly_temperature()
+visualize_population_and_temperature(data)
