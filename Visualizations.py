@@ -1,7 +1,7 @@
 import sqlite3
 import matplotlib.pyplot as plt
 
-#Population Visualization (bar graph) & Calculation File 
+#Population Visualization (bar graph)
 
 def fetch_population_for_years(db_name="Windy City Trends.db"):
     """Fetch population for the years 2000 and 2020 from the database."""
@@ -18,22 +18,7 @@ def fetch_population_for_years(db_name="Windy City Trends.db"):
     conn.close()
     return {row[0]: row[1] for row in data}
 
-def save_population_data_to_file(data, filename="population_data.txt"):
-    """Save population data and change calculation to a text file."""
-    population_2000 = data.get("2000", 0)
-    population_2020 = data.get("2020", 0)
-    population_change = population_2020 - population_2000
-
-    with open(filename, "w") as file:
-        file.write("Population Data:\n")
-        file.write(f"2000: {population_2000:,} people\n")
-        file.write(f"2020: {population_2020:,} people\n")
-        file.write(f"Change: {population_change:,} people\n")
-    print(f"Population data written to {filename}")
-
-
 population_data = fetch_population_for_years()  
-save_population_data_to_file(population_data)  
 
 population_2000 = population_data.get("2000", 0)
 population_2020 = population_data.get("2020", 0)
@@ -58,7 +43,7 @@ plt.xlabel("Years", fontsize=13)
 
 plt.show()
 
-#Precipitation Visualization (line chart) & Calculation File 
+#Precipitation Visualization (line chart) 
 
 def fetch_precipitation_from_db(db_name="Windy City Trends.db"):
     """Fetch all precipitation data from the database."""
@@ -72,20 +57,9 @@ def fetch_precipitation_from_db(db_name="Windy City Trends.db"):
     conn.close()
     return data
 
-def save_precipitation_data_to_file(monthly_averages_by_year, filename="precipitation_data.txt"):
-    """Save the monthly average precipitation data to a text file."""
-    with open(filename, "w") as file:
-        file.write("Monthly Average Precipitation Data (in mm):\n\n")
-        for year, monthly_data in monthly_averages_by_year.items():
-            file.write(f"Year {year}:\n")
-            for month, avg_value in monthly_data.items():
-                file.write(f"  {month}: {avg_value:.2f} mm\n")
-            file.write("\n")  
-    print(f"Precipitation data written to {filename}")
-
 precipitation_data = fetch_precipitation_from_db()
+precipitation_by_year_month = {} 
 
-precipitation_by_year_month = {}
 for date, value in precipitation_data:
     date_str = str(date)
     year, month, _ = date_str[:4], date_str[4:6], date_str[6:]
@@ -99,8 +73,6 @@ monthly_averages_by_year_precipitation = {}
 for year, monthly_data in precipitation_by_year_month.items():
     monthly_averages = {month: sum(values) / len(values) for month, values in monthly_data.items()}
     monthly_averages_by_year_precipitation[year] = monthly_averages
-
-save_precipitation_data_to_file(monthly_averages_by_year_precipitation)
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 colors = ["navy", "coral"]
@@ -119,7 +91,7 @@ plt.legend(title="Year Legend", fontsize=11)
 
 plt.show()
 
-# Humidity Visualization (line chart) & Calculation File 
+# Humidity Visualization (line chart) 
 
 def fetch_humidity_from_db(db_name="Windy City Trends.db"):
     """Fetch all humidity data from the database."""
@@ -132,17 +104,6 @@ def fetch_humidity_from_db(db_name="Windy City Trends.db"):
     data = cursor.fetchall()
     conn.close()
     return data
-
-def save_humidity_data_to_file(monthly_averages_by_year, filename="humidity_data.txt"):
-    """Save the monthly average humidity data to a text file."""
-    with open(filename, "w") as file:
-        file.write("Monthly Average Humidity Data (%):\n\n")
-        for year, monthly_data in monthly_averages_by_year.items():
-            file.write(f"Year {year}:\n")
-            for month, avg_humidity in monthly_data.items():
-                file.write(f"  {month}: {avg_humidity:.2f}%\n")
-            file.write("\n")  
-    print(f"Humidity data written to {filename}")
 
 humidity_data = fetch_humidity_from_db()
 
@@ -160,8 +121,6 @@ monthly_averages_by_year = {}
 for year, monthly_data in humidity_by_year_month.items():
     monthly_averages = {month: sum(humidity_values) / len(humidity_values) for month, humidity_values in monthly_data.items()}
     monthly_averages_by_year[year] = monthly_averages
-
-save_humidity_data_to_file(monthly_averages_by_year)
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -181,7 +140,7 @@ plt.legend(title="Year Legend", fontsize=11)
 
 plt.show()
 
-# Temperature Visualization (line chart) & Calculation File 
+# Temperature Visualization (line chart) 
 
 def fetch_temperature_from_db(db_name="Windy City Trends.db"):
     """Fetch all temperature data from the database."""
@@ -194,20 +153,6 @@ def fetch_temperature_from_db(db_name="Windy City Trends.db"):
     data = cursor.fetchall()
     conn.close()
     return data
-
-def save_temperature_data_to_file(monthly_averages_by_year, filename="temperature_data.txt"):
-    """Save the monthly average temperature data to a text file."""
-    with open(filename, "w") as file:
-        file.write("Monthly Average Temperature Data (°C):\n\n")
-        for year, monthly_data in monthly_averages_by_year.items():
-            file.write(f"Year {year}:\n")
-            for month, avg_temperature in monthly_data.items():
-                if avg_temperature is not None:
-                    file.write(f"  {month}: {avg_temperature:.2f} °C\n")
-                else:
-                    file.write(f"  {month}: No data\n")
-            file.write("\n")  
-    print(f"Temperature data written to {filename}")
 
 temperature_data = fetch_temperature_from_db()
 
@@ -228,8 +173,6 @@ for year, monthly_data in temperature_by_year_month.items():
                         for month, temp_values in monthly_data.items()}
     monthly_averages_by_year[year] = monthly_averages
 
-save_temperature_data_to_file(monthly_averages_by_year)
-
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 colors = ["blue", "magenta"]  
 
@@ -245,7 +188,59 @@ plt.ylabel("Average Temperature (°C)", fontsize=15)
 plt.xticks(months, fontsize=11)
 plt.legend(title="Year Legend", fontsize=11)
 
-plt.show()
+plt.show()  
+
+
+# Calculation File 
+
+def save_combined_data_to_file(population_data, precipitation_data, humidity_data, temperature_data, filename="combined_calculation.txt"):
+    """Save all data into one combined text file."""
+    population_2000 = population_data.get("2000", 0)
+    population_2020 = population_data.get("2020", 0)
+    population_change = population_2020 - population_2000
+
+    # Population Data
+    with open(filename, "w") as file:
+        file.write("Population Data:\n")
+        file.write(f"2000: {population_2000:,} people\n")
+        file.write(f"2020: {population_2020:,} people\n")
+        file.write(f"Change: {population_change:,} people\n\n")
+
+        # Precipitation Data
+        file.write("Monthly Average Precipitation Data (in mm):\n\n")
+        for year, monthly_data in precipitation_data.items():
+            file.write(f"Year {year}:\n")
+            for month, avg_value in monthly_data.items():
+                file.write(f"  {month}: {avg_value:.2f} mm\n")
+            file.write("\n")
+
+        # Humidity Data
+        file.write("Monthly Average Humidity Data (%):\n\n")
+        for year, monthly_data in humidity_data.items():
+            file.write(f"Year {year}:\n")
+            for month, avg_humidity in monthly_data.items():
+                file.write(f"  {month}: {avg_humidity:.2f}%\n")
+            file.write("\n")
+
+        # Temperature Data
+        file.write("Monthly Average Temperature Data (°C):\n\n")
+        for year, monthly_data in temperature_data.items():
+            file.write(f"Year {year}:\n")
+            for month, avg_temperature in monthly_data.items():
+                if avg_temperature is not None:
+                    file.write(f"  {month}: {avg_temperature:.2f} °C\n")
+                else:
+                    file.write(f"  {month}: No data\n")
+            file.write("\n")
+
+    print(f"All data combined and written to {filename}")
+
+save_combined_data_to_file(
+    population_data=population_data,
+    precipitation_data=monthly_averages_by_year_precipitation,
+    humidity_data=monthly_averages_by_year,
+    temperature_data=monthly_averages_by_year
+)
 
 #JOIN with Population + Temperature and Visualization 
 
