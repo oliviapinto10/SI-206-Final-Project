@@ -8,8 +8,9 @@ def initialize_database(db_name="Windy City Trends.db"):
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS chicago_population (
-            date INTEGER PRIMARY KEY,
-            population INTEGER
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date INTEGER NOT NULL UNIQUE,
+            population INTEGER NOT NULL
         )
     """)
     conn.commit()
@@ -67,7 +68,6 @@ def fetch_chicago_population(api_key, db_name="Windy City Trends.db"):
             for date in first_5_days:
                 date_str = f"{year}-{date}"
 
-                # Convert date string to integer in YYYYMMDD format
                 date_obj = datetime.strptime(date_str, "%Y-%m-%d")
                 date_int = int(date_obj.strftime("%Y%m%d"))
 
