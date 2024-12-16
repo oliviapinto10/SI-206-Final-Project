@@ -3,11 +3,9 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 
-
 API_KEY = "WsrAbyxadIzZgtFanYBiXgzRcjaswpuH"
 BASE_URL = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data"
 STATION_ID = "GHCND:USW00094846"
-
 
 def fetch_temperature_data(start_date, end_date):
     params = {
@@ -28,26 +26,22 @@ def fetch_temperature_data(start_date, end_date):
         print(f"API request failed: {e}")
         return []
 
-
 def create_database():
     conn = sqlite3.connect("Windy City Trends.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS temperature_data
-                     (date INTEGER PRIMARY KEY, temperature REAL)''')  # Changed to INTEGER
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT, date INTEGER UNIQUE, temperature REAL)''')  # Added AUTOINCREMENT for id
     cursor.execute('''CREATE TABLE IF NOT EXISTS last_processed_date
                      (id INTEGER PRIMARY KEY, date TEXT)''')
     return conn, cursor
-
 
 def get_last_processed_date(cursor):
     cursor.execute("SELECT date FROM last_processed_date WHERE id = 1")
     result = cursor.fetchone()
     return datetime.strptime(result[0], "%Y-%m-%d") if result else datetime(2000, 1, 1)
 
-
 def update_last_processed_date(cursor, date):
     cursor.execute("INSERT OR REPLACE INTO last_processed_date (id, date) VALUES (1, ?)", (date.strftime("%Y-%m-%d"),))
-
 
 def get_next_valid_date(date):
     if date.year == 2000 and date.month == 12 and date.day > 5:
@@ -58,7 +52,6 @@ def get_next_valid_date(date):
         return datetime(date.year, date.month + 1, 1)
     else:
         return date
-
 
 def main():
     conn, cursor = create_database()
@@ -79,11 +72,10 @@ def main():
             date = datetime.strptime(item.get('date'), "%Y-%m-%dT%H:%M:%S")
             temperature = item.get('value')
 
-            # Convert date to integer format YYYYMMDD
             date_int = int(date.strftime("%Y%m%d"))
 
             if date.date() >= last_date.date() and temperature is not None:
-                cursor.execute("INSERT OR REPLACE INTO temperature_data VALUES (?, ?)", (date_int, temperature))
+                cursor.execute("INSERT OR REPLACE INTO temperature_data (date, temperature) VALUES (?, ?)", (date_int, temperature))
                 data_count += 1
                 last_date = date
                 print(f"Inserted data point {data_count}: {date_int}, {temperature}°C")
@@ -95,7 +87,6 @@ def main():
 
     conn.close()
     print(f"Data collection complete. Total data points added: {data_count}")
-
 
 if __name__ == "__main__":
     main()
