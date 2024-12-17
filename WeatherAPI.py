@@ -30,7 +30,7 @@ def create_database():
     conn = sqlite3.connect("Windy City Trends.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS temperature_data
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT, date INTEGER UNIQUE, temperature REAL)''')  # Added AUTOINCREMENT for id
+                 (id INTEGER PRIMARY KEY, date INTEGER UNIQUE, temperature REAL)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS last_processed_date
                      (id INTEGER PRIMARY KEY, date TEXT)''')
     return conn, cursor
@@ -75,7 +75,7 @@ def main():
             date_int = int(date.strftime("%Y%m%d"))
 
             if date.date() >= last_date.date() and temperature is not None:
-                cursor.execute("INSERT OR REPLACE INTO temperature_data (date, temperature) VALUES (?, ?)", (date_int, temperature))
+                cursor.execute("INSERT OR IGNORE INTO temperature_data (date, temperature) VALUES (?, ?)", (date_int, temperature))
                 data_count += 1
                 last_date = date
                 print(f"Inserted data point {data_count}: {date_int}, {temperature}°C")
